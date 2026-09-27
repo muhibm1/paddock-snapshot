@@ -1,0 +1,49 @@
+# CI for Paddock. No secrets anywhere: nothing here talks to a database or an API. The two
+# Studbook parity gates need a live database, so they skip here; the unit step asserts how many
+# tests ran, so a suite that skipped its way to green fails instead.
+
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      WORKHORSE_PLUGIN_DIR: ${{ github.workspace }}/.workhorse-plugin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Check out the WorkHorse plugin Paddock bundles
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: muhibm1/workhorse-snapshot
+          path: .workhorse-plugin
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Dependency audit
+        run: npm audit
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        env:
+          NO_COLOR: "1"
+        run: |
+          npx vitest run 2>&1 | tee vitest.log
+          passed=$(sed -E 's/\x1B\[[0-9;]*m//g' vitest.log | grep -oP 'Tests\s+\K[0-9]+(?= passed)' | tail -1)
+          echo "passed: $passed"
+          test "${passed:-0}" -ge 240
+      - name: Build
+        run: npm run build
