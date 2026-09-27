@@ -1,0 +1,15 @@
+node_modules/
+out/
+dist/
+resources/plugin/
+playwright-report/
+test-results/
+
+# throwaway drivers for manual app runs
+*.tmp.cjs
+*.tmp.js
+
+# the WorkHorse plugin checkout CI uses to build
+.workhorse-plugin/
+.env*
+!.env.example

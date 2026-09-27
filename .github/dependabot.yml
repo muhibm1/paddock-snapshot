@@ -1,0 +1,16 @@
+# Keeps npm dependencies and CI's pinned actions current. Any @huggingface/transformers bump must
+# pass the Studbook parity gates locally before merging (they need a live database).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      model-runtime:
+        patterns: ["@huggingface/transformers", "sharp", "onnxruntime-node"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
